@@ -277,6 +277,7 @@ int kvstore_parser_protocol(struct conn_item *item, char **tokens, int count)
         {
             snprintf(msg, BUFFER_LENGTH, "FAILED");
         }
+        wal_append("RSET", key, value);
         break;
     }
 
@@ -291,6 +292,7 @@ int kvstore_parser_protocol(struct conn_item *item, char **tokens, int count)
         {
             snprintf(msg, BUFFER_LENGTH, "NO EXIST");
         }
+        wal_append("RGET", key, value);
         break;
     }
 
@@ -309,6 +311,7 @@ int kvstore_parser_protocol(struct conn_item *item, char **tokens, int count)
         {
             snprintf(msg, BUFFER_LENGTH, "NO EXIST");
         }
+        wal_append("RDEL", key, value);
         break;
     }
 
@@ -327,6 +330,7 @@ int kvstore_parser_protocol(struct conn_item *item, char **tokens, int count)
         {
             snprintf(msg, BUFFER_LENGTH, "NO EXIST");
         }
+        wal_append("RMOD", key, value);
         break;
     }
 
@@ -355,6 +359,7 @@ int kvstore_parser_protocol(struct conn_item *item, char **tokens, int count)
         {
             snprintf(msg, BUFFER_LENGTH, "FAILED");
         }
+        wal_append("HSET", key, value);
         break;
     }
 
@@ -369,6 +374,7 @@ int kvstore_parser_protocol(struct conn_item *item, char **tokens, int count)
         {
             snprintf(msg, BUFFER_LENGTH, "NO EXIST");
         }
+        wal_append("HET", key, value);
         break;
     }
 
@@ -387,6 +393,7 @@ int kvstore_parser_protocol(struct conn_item *item, char **tokens, int count)
         {
             snprintf(msg, BUFFER_LENGTH, "NO EXIST");
         }
+        wal_append("HDEL", key, value);
         break;
     }
 
@@ -405,6 +412,7 @@ int kvstore_parser_protocol(struct conn_item *item, char **tokens, int count)
         {
             snprintf(msg, BUFFER_LENGTH, "NO EXIST");
         }
+        wal_append("HMOD", key, value);
         break;
     }
 
