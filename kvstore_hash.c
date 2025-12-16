@@ -1,6 +1,3 @@
-
-
-
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -49,19 +46,11 @@ hashtable_t Hash;
 // key: Name0  --> Name50000
 
 static int _hash(char *key, int size) {
-
-	if (!key) return -1;
-
-	int sum = 0;
-	int i = 0;
-
-	while (key[i] != 0) {
-		sum += key[i];
-		i ++;
-	}
-
-	return sum % size;
-
+    unsigned long hash = 5381;
+    int c;
+    while ((c = *key++))
+        hash = ((hash << 5) + hash) + c;
+    return hash % size;
 }
 
 hashnode_t *_create_node(char *key, char *value) {
@@ -107,6 +96,7 @@ int init_hashtable(hashtable_t *hash) {
 	hash->nodes = (hashnode_t**)kvstore_malloc(sizeof(hashnode_t*) * MAX_TABLE_SIZE);
 	if (!hash->nodes) return -1;
 
+	memset(hash->nodes, 0, sizeof(hashnode_t*) * MAX_TABLE_SIZE);
 	hash->max_slots = MAX_TABLE_SIZE;
 	hash->count = 0; 
 
@@ -147,14 +137,15 @@ int put_kv_hashtable(hashtable_t *hash, char *key, char *value) {
 	int idx = _hash(key, MAX_TABLE_SIZE);
 
 	hashnode_t *node = hash->nodes[idx];
-#if 1
 	while (node != NULL) {
-		if (strcmp(node->key, key) == 0) { // exist
-			return 1;
+		if (strcmp(node->key, key) == 0) { // exist, update value
+			kvstore_free(node->value);
+			node->value = kvstore_malloc(strlen(value) + 1);
+			strcpy(node->value, value);
+			return 0;
 		}
 		node = node->next;
 	}
-#endif
 
 	hashnode_t *new_node = _create_node(key, value);
 	new_node->next = hash->nodes[idx];
