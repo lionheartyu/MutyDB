@@ -15,6 +15,7 @@ const int kAdded = 1;
 // channel 从poller中删除
 const int kDeleted = 2;
 
+const int kInitEventListSize = 16; // 确保大于0
 EPollPoller::EPollPoller(EventLoop *loop)
     : Poller(loop),
       epollfd_(::epoll_create1(EPOLL_CLOEXEC)),
@@ -46,7 +47,7 @@ Timestamp EPollPoller::poll(int timeoutMs, ChannelList *activeChannels)
     {
         LOG_INFO("%d events happened\n", numEvents);
         fillActiveChannel(numEvents, activeChannels);
-        if (numEvents = events_.size())
+        if (numEvents == static_cast<int>(events_.size()))
         {
             events_.resize(events_.size() * 2);
         }
@@ -61,7 +62,7 @@ Timestamp EPollPoller::poll(int timeoutMs, ChannelList *activeChannels)
         if (saveErrno != EINTR)
         {
             errno = saveErrno;
-            LOG_ERROR("EPOllPOller::poll()err!");
+            LOG_ERROR("EPOllPOller::poll()err! errno=%d (%s)", errno, strerror(errno));
         }
     }
     return now;
