@@ -1,4 +1,9 @@
 #include "kvstore.h"
+#include <stdio.h>
+#include <string.h>
+
+void wal_replay();
+void wal_append(const char *cmd, const char *key, const char *value); // 添加这一行
 
 #define KVSTORE_MAX_TOKEN 128
 
@@ -188,6 +193,7 @@ int kvstore_parser_protocol(struct conn_item *item, char **tokens, int count)
         {
             snprintf(msg, BUFFER_LENGTH, "FAILED");
         }
+        wal_append("SET", key, value);
         break;
     }
 
@@ -223,6 +229,7 @@ int kvstore_parser_protocol(struct conn_item *item, char **tokens, int count)
         {
             snprintf(msg, BUFFER_LENGTH, "NO EXIST");
         }
+        wal_append("DEL", key, NULL);
         break;
     }
 
@@ -242,6 +249,7 @@ int kvstore_parser_protocol(struct conn_item *item, char **tokens, int count)
         {
             snprintf(msg, BUFFER_LENGTH, "NO EXIST");
         }
+        wal_append("MOD", key, value);
         break;
     }
     case KV_CMD_COUNT:
@@ -448,10 +456,13 @@ int kvstore_requese(struct conn_item *item)
     return 0;
 }
 
+
+
 int init_kvengine(void)
 {
 #if ENABLE_ARRAY_KVENGINE
     kvstore_array_create(&Array);
+    wal_replay(); // 启动时重放 WAL 日志
 #endif
 
 #if ENABLE_RBTREE_KVENGINE
@@ -490,6 +501,47 @@ int destory_pool(void)
 #if ENABLE_MEM_POOL
     mp_dest(&M);
 #endif
+}
+
+/**
+ * wal_replay - 启动时重放 WAL 日志，实现数据恢复。
+ *
+ * 依次读取 wal.log 文件中的每一条操作，并在内存中执行（如 SET、DEL），
+ * 从而恢复上次运行时的数据状态，实现持久化恢复。
+ */
+void wal_replay() {
+    FILE *fp = fopen("wal.log", "r");
+    if (!fp) return;
+    char cmd[16], key[256], value[256];
+    // 逐行读取 wal.log，解析命令并恢复数据
+    while (fscanf(fp, "%15s %255s %255[^\n]", cmd, key, value) >= 2) {
+        if (strcmp(cmd, "SET") == 0 || strcmp(cmd, "MOD") == 0) {
+            // 对于 SET 和 MOD，恢复 key/value
+            kvstore_array_set(key, value);
+        } else if (strcmp(cmd, "DEL") == 0) {
+            // 对于 DEL，删除 key
+            kvstore_array_del(key);
+        }
+        // 你可以根据需要扩展更多命令
+    }
+    fclose(fp);
+}
+
+// * 每次写操作（SET/DEL/MOD）都会调用本函数，将操作内容追加写入 wal.log 文件。
+FILE *wal_fp = NULL;
+void wal_append(const char *cmd, const char *key, const char *value) {
+    if (!wal_fp) {
+        wal_fp = fopen("wal.log", "a");
+    }
+    if (wal_fp) {
+        // 写入命令到日志文件，SET/MOD 带 value，DEL 不带 value
+        if (value)
+            fprintf(wal_fp, "%s %s %s\n", cmd, key, value);
+        else
+            fprintf(wal_fp, "%s %s\n", cmd, key);
+        // 立即刷新缓冲区，确保数据写入磁盘
+        fflush(wal_fp);
+    }
 }
 
 int main()
