@@ -1,4 +1,3 @@
-
 #include "kvstore.h"
 
 #define KVSTORE_MAX_TOKEN 128
@@ -429,6 +428,11 @@ int kvstore_requese(struct conn_item *item)
     // printf("recv: %s\n",item->rbuffer);
 
     char *msg = item->rbuffer;
+    size_t len = strlen(msg);
+    while (len > 0 && (msg[len-1] == '\n' || msg[len-1] == '\r')) {
+        msg[--len] = '\0';
+    }
+
     char *tockens[KVSTORE_MAX_TOKEN];
 
     int count = kvstore_split_token(msg, tockens);
