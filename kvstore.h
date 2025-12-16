@@ -81,7 +81,7 @@ void kvstore_free(void *ptr);
 #define ENABLE_HASH_KVENGINE 1
 
 #define ENABLE_MEM_POOL 0
-#define ENABLE_NETWORK_SELECT NETWORK_NTYCO
+#define ENABLE_NETWORK_SELECT NETWORK_NTYCO 
 
 #if ENABLE_MEM_POOL
 typedef struct mempool_s mempool_t;
