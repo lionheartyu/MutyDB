@@ -57,7 +57,7 @@ private:
 int kmuduo_enrty()
 {
     EventLoop loop;
-    InetAddress addr(8080, "192.168.217.148");
+    InetAddress addr(8080, "10.20.32.132");
     EchoServer echoServer(&loop, addr, "myserver-01"); // accpertor non-blocking listenfd create bind
     echoServer.start();                                // listen  loopthread  listenfd => accpetorchannle => mainloop
     loop.loop();                                       // 启动mainloop的底层poller
