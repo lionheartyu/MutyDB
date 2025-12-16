@@ -9,6 +9,7 @@
 ## 快速开始
 
 1. **环境准备**  
+   安装liburing库,sudo apt-get install liburing-dev
    在 `Kmuduo` 目录下执行以下命令，一键部署并编译所需环境：
    ```bash
    ./autobuild.sh
